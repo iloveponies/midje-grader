@@ -29,11 +29,12 @@
   ([])
   ([_ _]
      (pp/print-table
-      (for [[exercise got] @earned-points
-            :let [out-of (get @total-points exercise)]]
-        {"exercise" exercise
-         "got" got
-         "out-of" out-of}))))
+      (sort-by :exercise
+               (for [[exercise got] @earned-points
+                     :let [out-of (get @total-points exercise)]]
+                 {"exercise" exercise
+                  "got" got
+                  "out-of" out-of})))))
 
 (state/install-emission-map
  (assoc default/emission-map
