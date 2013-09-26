@@ -15,7 +15,7 @@
 (defn before-fact [fact]
   (let [exercise (:exercise (meta fact))]
     (swap! passed? (constantly true))
-    (util/emit-one-line (format "For exercise %s" exercise))))
+    (util/emit-one-line (format "----\nFor exercise %s" exercise))))
 
 (defn after-fact [fact]
   (let [exercise (:exercise (meta fact))
