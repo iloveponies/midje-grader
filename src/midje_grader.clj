@@ -13,14 +13,14 @@
   ((:fail default/emission-map) args))
 
 (defn before-fact [fact]
-  (let [exercise (:exercise (meta fact))]
+  (if-let [exercise (:exercise (meta fact))]
     (swap! passed? (constantly true))
     (util/emit-one-line (format "----\nFor exercise %s" exercise))))
 
 (defn after-fact [fact]
-  (let [exercise (:exercise (meta fact))
-        points (:points (meta fact))
-        got (if @passed? points 0)]
+  (if-let [exercise (:exercise (meta fact))
+           points (:points (meta fact))
+           got (if @passed? points 0)]
     (swap! total-points #(assoc % exercise (+ points (get % exercise 0))))
     (swap! earned-points #(assoc % exercise (+ got (get % exercise 0))))
     (util/emit-one-line (format "%d/%d points" got points))))
