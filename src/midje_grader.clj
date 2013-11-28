@@ -13,18 +13,17 @@
   (swap! passed? (constantly false)))
 
 (defn before-fact [fact]
-  (if-let [exercise (:exercise (meta fact))]
-    (do
-      (swap! passed? (constantly true))
-      (util/emit-one-line (format "----\nFor exercise %s" exercise)))))
+  (when-let [exercise (:exercise (meta fact))]
+    (swap! passed? (constantly true))))
 
 (defn after-fact [fact]
-  (if-let [exercise (:exercise (meta fact))]
-    (let [points (:points (meta fact))
-          got (if @passed? points 0)]
-      (swap! total-points #(assoc % exercise (+ points (get % exercise 0))))
-      (swap! earned-points #(assoc % exercise (+ got (get % exercise 0))))
-      (util/emit-one-line (format "%d/%d points" got points)))))
+  (when-let [exercise (:exercise (meta fact))]
+    (let [max-points (:points (meta fact))
+          points (if @passed? max-points 0)]
+      (swap! total-points
+             #(assoc % exercise (+ max-points (get % exercise 0))))
+      (swap! earned-points
+             #(assoc % exercise (+ points (get % exercise 0)))))))
 
 (defn before-all []
   (swap! total-points (constantly {}))
@@ -33,15 +32,20 @@
 (defn after-all
   ([])
   ([_ _]
-     (let [data (for [[exercise got] @earned-points
-                      :let [out-of (get @total-points exercise)]]
-                  {"exercise" exercise
-                   "got" got
-                   "out-of" out-of})]
+     (let [data (for [[exercise points] @earned-points
+                      :let [max-points (get @total-points exercise)]]
+                  {:exercise exercise
+                   :points points
+                   :max-points max-points})
+           points-total (apply + (vals @earned-points))
+           max-points-total (apply + (vals @total-points))]
        (util/emit-one-line "midje-grader:data")
        (util/emit-one-line (json/write-str data))
        (util/emit-one-line "midje-grader:data")
-       (pp/print-table data))))
+       (pp/print-table (cons {:exercise "total"
+                              :points points-total
+                              :max-points max-points-total}
+                             data)))))
 
 (state/install-emission-map
  (assoc silence/emission-map
